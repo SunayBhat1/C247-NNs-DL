@@ -46,7 +46,7 @@ class KNN(object):
         #   training point using norm(), and store the result in dists[i, j].     
         # ================================================================ #
 
-        pass
+        dists[i,j] = np.sqrt(np.square((self.X_train[j,:] - X[i,:])).sum())
 
         # ================================================================ #
         # END YOUR CODE HERE
@@ -83,7 +83,7 @@ class KNN(object):
     #   array.
     # ================================================================ #
 
-    pass
+    dists[i,j] = np.sqrt(np.square((self.X_train[j,:] - X[i,:])).sum())
 
     # ================================================================ #
     # END YOUR CODE HERE
