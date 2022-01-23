@@ -40,7 +40,10 @@ class Softmax(object):
     #   set margins, and then normalize the loss by the number of 
     #   training examples.)
     # ================================================================ #
-    pass
+    
+    # sum[1:m]{log sum[1:c]{e^(w' * x)} - w' * x}/m
+    for i in range(X.shape[0]):
+      loss += (np.log(np.sum(np.exp(self.W @ X[i]))) - self.W[y[i]] @ X[i]) / X.shape[0]
     
     # ================================================================ #
     # END YOUR CODE HERE
@@ -65,7 +68,15 @@ class Softmax(object):
     #   Calculate the softmax loss and the gradient. Store the gradient
     #   as the variable grad.
     # ================================================================ #
-    pass
+    loss = self.loss(X,y)
+
+    # sum[1:m]{x * (softmax(x))-Indicato(y=j)}
+    for i in range(X.shape[0]):
+      for j in range(self.W.shape[0]):
+        grad[j] += (np.exp(self.W[j] @ X[i]) * X[i])/ np.sum(np.exp(self.W @ X[i])) - ((j == y[i]) * X[i]) 
+
+    grad /= X.shape[0]
+    
     
     # ================================================================ #
     # END YOUR CODE HERE
@@ -106,7 +117,14 @@ class Softmax(object):
     # YOUR CODE HERE:
     #   Calculate the softmax loss and gradient WITHOUT any for loops.
     # ================================================================ #
-    pass
+
+
+    loss = np.sum(np.log(np.sum(np.exp(self.W @ X.T),axis=0)) - np.sum(self.W[y] * X, axis=1)) / X.shape[0]
+
+    softmax = np.exp(self.W @ X.T) / np.sum(np.exp(X @ self.W.T), axis=1)
+    softmax[y,np.arange(X.shape[0])] -= 1
+
+    grad = softmax @ X / X.shape[0]
     
     # ================================================================ #
     # END YOUR CODE HERE
@@ -154,8 +172,10 @@ class Softmax(object):
       #   in the dataset.  Use np.random.choice.  It's okay to sample with
       #   replacement.
       # ================================================================ #
-      pass
-      # ================================================================ #
+      batch_samples = np.random.choice(np.arange(num_train), batch_size)
+      X_batch = X[batch_samples]
+      y_batch = y[batch_samples]
+      # =============================================================== #
       # END YOUR CODE HERE
       # ================================================================ #
 
@@ -167,7 +187,7 @@ class Softmax(object):
       # YOUR CODE HERE:
       #   Update the parameters, self.W, with a gradient step 
       # ================================================================ #
-      pass
+      self.W -= learning_rate*grad
 
       # ================================================================ #
       # END YOUR CODE HERE
@@ -193,7 +213,7 @@ class Softmax(object):
     # YOUR CODE HERE:
     #   Predict the labels given the training data.
     # ================================================================ #
-    pass
+    y_pred = np.argmax((self.W @ X.T),axis=0)
     # ================================================================ #
     # END YOUR CODE HERE
     # ================================================================ #

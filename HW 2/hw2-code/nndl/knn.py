@@ -46,7 +46,7 @@ class KNN(object):
         #   training point using norm(), and store the result in dists[i, j].     
         # ================================================================ #
 
-        dists[i,j] = np.sqrt(np.square((self.X_train[j,:] - X[i,:])).sum())
+        dists[i,j] = norm(X[i] - self.X_train[j])
 
         # ================================================================ #
         # END YOUR CODE HERE
@@ -83,7 +83,16 @@ class KNN(object):
     #   array.
     # ================================================================ #
 
-    dists[i,j] = np.sqrt(np.square((self.X_train[j,:] - X[i,:])).sum())
+    # Compute (A-B)^2
+    # For memory efficiency: Compute sqrt( X^2 + X_train^2 - 2*X*X_train')
+    # Need to use broadcasting to get all columns element 
+    # Source: https://stackoverflow.com/a/35814006
+
+    X_sq_sum = np.sum(np.square(X),axis=1).reshape(X.shape[0],1)    # X^2 + add axis for broadcasting
+    X_train_sq_sum = np.sum(np.square(self.X_train),axis=1)         # X_train^2
+    X_dot_X_train = X @ self.X_train.T                              # X*X_train'
+
+    dists = np.sqrt(X_sq_sum + X_train_sq_sum - 2 * X_dot_X_train)  # Compute sqrt( X^2 + X_train^2 - 2*X*X_train')
 
     # ================================================================ #
     # END YOUR CODE HERE
@@ -110,7 +119,7 @@ class KNN(object):
     for i in np.arange(num_test):
       # A list of length k storing the labels of the k nearest neighbors to
       # the ith test point.
-      closest_y = []
+      # closest_y = []
       # ================================================================ #
       # YOUR CODE HERE:
       #   Use the distances to calculate and then store the labels of 
@@ -121,8 +130,11 @@ class KNN(object):
       #   neighbors.  Store the predicted label of the ith training example
       #   as y_pred[i].  Break ties by choosing the smaller label.
       # ================================================================ #
-  
-      pass
+
+      # Sources: https://stackoverflow.com/a/23734295 , https://www.delftstack.com/howto/python/mode-of-list-in-python/
+    
+      closest_y_s = self.y_train[dists[i,:].argsort()[:k]].tolist()
+      y_pred[i] = (max(set(closest_y_s), key = closest_y_s.count))
 
       # ================================================================ #
       # END YOUR CODE HERE
