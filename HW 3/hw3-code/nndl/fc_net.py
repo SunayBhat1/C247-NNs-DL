@@ -179,8 +179,12 @@ class FullyConnectedNet(object):
     #   biases are initialized to zero and the weights are initialized
     #   so that each parameter has mean 0 and standard deviation weight_scale.
     # ================================================================ #
-    
-    pass
+
+    # Concat dims for full NN
+    dims = [input_dim] + hidden_dims + [num_classes]
+    for layer in range(self.num_layers):
+      self.params['W' + str(layer + 1)] = np.random.normal(0, weight_scale,(dims[layer], dims[layer + 1]))
+      self.params['b' + str(layer + 1)] = np.zeros(dims[layer + 1])
 
     # ================================================================ #
     # END YOUR CODE HERE
@@ -234,7 +238,15 @@ class FullyConnectedNet(object):
     #   scores as the variable "scores".
     # ================================================================ #
 
-    pass
+    a = {}
+    h = {}
+    h[0] = [X]
+
+    for layer in range(self.num_layers):
+      a[layer + 1] = affine_forward(h[layer][0], self.params['W' + str(layer + 1)],self.params['b' + str(layer + 1)])
+      if layer < self.num_layers: h[layer + 1] = relu_forward(a[layer + 1][0])
+      
+    scores = a[self.num_layers][0]
 
     # ================================================================ #
     # END YOUR CODE HERE
@@ -252,7 +264,27 @@ class FullyConnectedNet(object):
     #   Be sure your L2 regularization includes a 0.5 factor.
     # ================================================================ #
 
-    pass
+    loss, dout = softmax_loss(scores, y)
+    Ws = [self.params['W' + str(i + 1)] for i in range(self.num_layers)]
+
+    loss += 0.5 * self.reg * sum([np.linalg.norm(weight, 'fro')**2 for weight in Ws])
+    das = {}
+    dhs = {}
+    dws = {}
+    dbs = {}
+    das[self.num_layers] = dout
+
+    for layer in reversed(range(self.num_layers)):
+      dh, dw, db = affine_backward(das[layer + 1], a[layer + 1][1])
+      dhs[layer] = dh
+      dws[layer + 1] = dw
+      dbs[layer + 1] = db
+      if layer != 0:
+        das[layer] = relu_backward(dhs[layer], h[layer][1])
+
+    for layer in range(self.num_layers):
+      grads['W' + str(layer + 1)] = dws[layer + 1] + self.reg * self.params['W' + str(layer + 1)]
+      grads['b' + str(layer + 1)] = dbs[layer + 1].T
 
     # ================================================================ #
     # END YOUR CODE HERE
