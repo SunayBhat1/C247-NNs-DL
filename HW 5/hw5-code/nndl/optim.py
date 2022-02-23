@@ -1,5 +1,6 @@
 import numpy as np
 
+
 """
 This file implements various first-order update rules that are commonly used for
 training neural networks. Each update rule accepts current weights and the
@@ -65,7 +66,9 @@ def sgd_momentum(w, dw, config=None):
   #   Implement the momentum update formula.  Return the updated weights
   #   as next_w, and the updated velocity as v.
   # ================================================================ #
-  pass
+
+  v = config['momentum'] * v - config['learning_rate'] * dw
+  next_w = w + v
 
   # ================================================================ #
   # END YOUR CODE HERE
@@ -96,7 +99,11 @@ def sgd_nesterov_momentum(w, dw, config=None):
   #   Implement the momentum update formula.  Return the updated weights
   #   as next_w, and the updated velocity as v.
   # ================================================================ #
-  pass
+
+  # Use change of vars implementation
+  v_old = v
+  v = config['momentum'] * v - config['learning_rate'] * dw
+  next_w = w + v + config['momentum'] * (v - v_old)
 
   # ================================================================ #
   # END YOUR CODE HERE
@@ -133,7 +140,11 @@ def rmsprop(w, dw, config=None):
   #   moment gradients, so they can be used for future gradients. Concretely,
   #   config['a'] corresponds to "a" in the lecture notes.
   # ================================================================ #
-  pass
+
+  config['a'] = config['a'] * config['decay_rate'] + (1-config['decay_rate']) * dw**2
+  next_w = w - config['learning_rate']/(np.sqrt(config['a']) + config['epsilon']) * dw
+
+
 
   # ================================================================ #
   # END YOUR CODE HERE
@@ -174,8 +185,19 @@ def adam(w, dw, config=None):
   #   moment gradients, and in config['v'] the moving average of the
   #   first moments.  Finally, store in config['t'] the increasing time.
   # ================================================================ #
-  pass
 
+  config['t'] += 1
+
+  # Moment Updates
+  config['v'] = config['beta1'] * config['v'] + (1-config['beta1']) * dw
+  config['a'] = config['beta2'] * config['a'] + (1-config['beta2']) * dw**2
+
+  # Bias Corection
+  v_corr =  config['v'] / (1-config['beta1']**config['t'])
+  a_corr = config['a'] / (1-config['beta2']**config['t'])
+
+  # Param Update
+  next_w = w - config['learning_rate']/(np.sqrt(a_corr) + config['epsilon']) * v_corr
   # ================================================================ #
   # END YOUR CODE HERE
   # ================================================================ #
